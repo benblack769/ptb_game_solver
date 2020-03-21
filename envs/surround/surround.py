@@ -2,6 +2,7 @@
 A Partially observable version of the old atari surround game
 '''
 import numpy as np
+from ..basic_env import BasicEnv
 
 
 EMPTY = 0
@@ -27,7 +28,7 @@ def add(p1,p2):
     return (x1+x2,y1+y2)
 
 
-class Surround:
+class Surround(BasicEnv):
     def __init__(self,BOARD_SIZE=(40,20),VIEW_SIZE=5):
         self.board_size = BOARD_SIZE
         self.view_size = VIEW_SIZE
@@ -60,7 +61,11 @@ class Surround:
             for y in range(0,BSY):
                 self.board[y][x] = FULL
 
-    def step_env(self):
+    def step_env(self,player_actions):
+        assert len(player_actions) == 2
+        for player, action in enumerate(player_actions):
+            self.dirs[player] = new_dir = action_to_dir(action,self.dirs[player])
+
         for p in range(2):
             ox,oy = self.posses[p]
             new_pos = add(self.posses[p],self.dirs[p])
@@ -72,10 +77,6 @@ class Surround:
 
             self.board[oy][ox] = FULL
             self.posses[p] = new_pos
-
-    def take_action(self,action,player):
-        assert 0 <= player <= 1
-        self.dirs[player] = new_dir = action_to_dir(action,self.dirs[player])
 
     def observe(self,player):
         BSX,BSY = self.board_size

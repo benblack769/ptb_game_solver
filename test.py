@@ -8,14 +8,12 @@ pygame.init()
 
 env = Surround()
 for i in range(1000):
-    for p in range(2):
-        a = random.randrange(5)
-        env.take_action(a,p)
+    actions = [random.randrange(5) for p in range(2)]
 
-    env.step_env()
+    env.step_env(actions)
     if env.game_ended:
         env.reset()
-    (env.observe(0))
+    obs = env.observe(0)
     #cur_surface = env.render()
 
     #screen.blit(cur_surface, (0,0))
