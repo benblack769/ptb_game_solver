@@ -1,6 +1,6 @@
 {
-    "map_fname": "enviornments/many_guards.svg.json",
-    "adjacency_list": "enviornments/many_guards.graph.json",
+    "map_fname": "many_guards.svg.json",
+    "adjacency_list": "many_guards.graph.json",
     "agent_weightmap": "wm_img_dir/many_guards.json_agent.weightmap.json.50",
     "guard_weightmap": "wm_img_dir/many_guards.json_guard.weightmap.json.50",
     "agent_linesight": 100,

@@ -1,6 +1,6 @@
 {
-    "map_fname": "enviornments/house.svg.json",
-    "adjacency_list": "enviornments/house.graph.json",
+    "map_fname": "house.svg.json",
+    "adjacency_list": "house.graph.json",
     "agent_weightmap": "wm_img_dir/house.json_agent.weightmap.json.45",
     "guard_weightmap": "wm_img_dir/house.json_guard.weightmap.json.45",
     "guard_locations": [56,118],

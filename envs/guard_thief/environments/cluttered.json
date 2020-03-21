@@ -1,6 +1,6 @@
 {
-    "map_fname": "enviornments/cluttered.svg.json",
-    "adjacency_list": "enviornments/cluttered.graph.json",
+    "map_fname": "cluttered.svg.json",
+    "adjacency_list": "cluttered.graph.json",
     "agent_weightmap": "wm_img_dir/cluttered.json_agent.weightmap.json.8",
     "guard_weightmap": "wm_img_dir/cluttered.json_guard.weightmap.json.8",
     "agent_linesight": 100,

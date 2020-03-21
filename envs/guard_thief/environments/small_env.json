@@ -1,6 +1,6 @@
 {
-    "map_fname": "enviornments/small_env.svg.json",
-    "adjacency_list": "enviornments/small_env.graph.json",
+    "map_fname": "small_env.svg.json",
+    "adjacency_list": "small_env.graph.json",
     "agent_weightmap": "wm_img_dir/small_env_agent.weightmap.json",
     "guard_weightmap": "wm_img_dir/small_env_guard.weightmap.json",
     "agent_linesight": 100,
