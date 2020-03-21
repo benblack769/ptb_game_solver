@@ -14,6 +14,16 @@ class BasicEnv:
         steps env with players having taken actions
         '''
 
+    def game_over(self):
+        '''
+        returns whether game is over
+        '''
+
+    def scores(self):
+        '''
+        if game is over, return scores for players. If game is not over, error.
+        '''
+
     def observe(self,player):
         '''
         return observation for player

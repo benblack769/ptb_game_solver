@@ -62,6 +62,9 @@ class Surround(BasicEnv):
                 self.board[y][x] = FULL
 
     def step_env(self,player_actions):
+        if self.game_ended:
+            raise RuntimeError("Game is over, but action taken anyways")
+
         assert len(player_actions) == 2
         for player, action in enumerate(player_actions):
             self.dirs[player] = new_dir = action_to_dir(action,self.dirs[player])
@@ -77,6 +80,17 @@ class Surround(BasicEnv):
 
             self.board[oy][ox] = FULL
             self.posses[p] = new_pos
+
+    def game_over(self):
+        return self.game_ended
+
+    def scores(self):
+        assert self.game_ended
+        p1_score = 1 if self.winner == 0 else -1
+        return [
+            p1_score,
+            -p1_score
+        ]
 
     def observe(self,player):
         BSX,BSY = self.board_size
