@@ -42,12 +42,12 @@ def evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=10,EVALS=1,NUM_PLAYERS=2):
                     for pop2_samp in pop2_samps]
 
     eval,pop1_support,pop2_support = zero_sum_asymetric_nash(eval_matrix)
-    print(np.array(eval_matrix))
-    print([str(samp.my_choice) for samp in pop1_samps])
-    print([str(samp.my_choice) for samp in pop1_samps])
-    print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
-    print(pop1_support)
-    print(pop2_support)
+    # print(np.array(eval_matrix))
+    # print([str(samp.my_choice) for samp in pop1_samps])
+    # print([str(samp.my_choice) for samp in pop2_samps])
+    # print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
+    # print(pop1_support)
+    # print(pop2_support)
     return eval
 
 def compare_populations(env,pop1,pop2,ITERS=1000,NUM_PLAYERS=2):
@@ -63,17 +63,17 @@ def compare_populations(env,pop1,pop2,ITERS=1000,NUM_PLAYERS=2):
 
 def objective_compare(objective):
     env = SingleStepEnv(objective)
-    #pop2 = OptRepPopulation(objective,UniformMixture(objective))
-    pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    pop2 = OptRepPopulation(objective,UniformMixture(objective))
+    #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
     pop1 = FictitiousPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    num_iters = 50
+    num_iters = 100
     game_repeats = 1
     compare_iters = 300
     train_pop(env,pop1,num_iters*100,game_repeats)
     train_pop(env,pop2,num_iters,game_repeats)
-    pop_result = evaluate_zero_sum_pops(env,pop1,pop2)
-    print([str(pop1.evaluate_sample().my_choice) for _ in range(15)])
-    print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
+    pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
+    # print([str(pop1.evaluate_sample().my_choice) for _ in range(15)])
+    # print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
     print(pop_result)
 
 def main():
