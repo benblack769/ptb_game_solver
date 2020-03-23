@@ -4,6 +4,8 @@ from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObje
 from solvers.choicemixtures import NashMixture,RectifiedNashMixture, \
                                 WeaknessesMixture,UniformMixture
 from solvers.opt_solver import OptRepPopulation
+from solvers.local_pert_solver import SelfPlayPertPopulation,FictitiousPertPopulation
+from solvers.nash_finder import zero_sum_asymetric_nash
 import numpy as np
 
 def get_single_game_score(env,agents,NUM_PLAYERS=2):
@@ -31,7 +33,22 @@ def train_pop(env,pop,NUM_ITERS,NUM_GAME_REPEATS,NUM_PLAYERS=2):
         agents,info = pop.train_sample()
         scores = get_repeated_score(env,agents,NUM_GAME_REPEATS)
         pop.addExperiences(info,agents,scores[0],None,None)
-        print(pop.my_choicemixture.player_strategies)
+
+def evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=10,EVALS=1,NUM_PLAYERS=2):
+    pop1_samps = [pop1.evaluate_sample() for _ in range(NUM_SAMPS)]
+    pop2_samps = [pop2.evaluate_sample() for _ in range(NUM_SAMPS)]
+    eval_matrix = [[get_repeated_score(env,[pop1_samp,pop2_samp],NUM_ITERS=EVALS)[0]
+                    for pop1_samp in pop1_samps]
+                    for pop2_samp in pop2_samps]
+
+    eval,pop1_support,pop2_support = zero_sum_asymetric_nash(eval_matrix)
+    print(np.array(eval_matrix))
+    print([str(samp.my_choice) for samp in pop1_samps])
+    print([str(samp.my_choice) for samp in pop1_samps])
+    print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
+    print(pop1_support)
+    print(pop2_support)
+    return eval
 
 def compare_populations(env,pop1,pop2,ITERS=1000,NUM_PLAYERS=2):
     pops = [pop1,pop2]
@@ -44,21 +61,24 @@ def compare_populations(env,pop1,pop2,ITERS=1000,NUM_PLAYERS=2):
     avg_scores = accum_scores/ITERS
     return avg_scores
 
-
 def objective_compare(objective):
     env = SingleStepEnv(objective)
-    pop2 = OptRepPopulation(objective,UniformMixture(objective))
-    pop1 = OptRepPopulation(objective,RectifiedNashMixture(objective))
-    num_iters = 7
+    #pop2 = OptRepPopulation(objective,UniformMixture(objective))
+    pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    pop1 = FictitiousPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    num_iters = 50
     game_repeats = 1
     compare_iters = 300
-    train_pop(env,pop1,num_iters,game_repeats)
+    train_pop(env,pop1,num_iters*100,game_repeats)
     train_pop(env,pop2,num_iters,game_repeats)
-    pop_result = compare_populations(env,pop1,pop2,compare_iters)
+    pop_result = evaluate_zero_sum_pops(env,pop1,pop2)
+    print([str(pop1.evaluate_sample().my_choice) for _ in range(15)])
+    print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
     print(pop_result)
 
 def main():
     objective_compare(RPCObjective())
+    #objective_compare(RPCCombObjective(10,5))
 
 if __name__ == "__main__":
     main()
