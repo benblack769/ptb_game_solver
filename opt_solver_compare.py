@@ -72,13 +72,15 @@ def objective_compare(objective):
     train_pop(env,pop1,num_iters*100,game_repeats)
     train_pop(env,pop2,num_iters,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
-    # print([str(pop1.evaluate_sample().my_choice) for _ in range(15)])
-    # print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
+    print("pop1")
+    print("\n".join([str(pop1.evaluate_sample().my_choice) for _ in range(15)]))
+    print("pop2")
+    print("\n".join([str(pop2.evaluate_sample().my_choice) for _ in range(15)]))
     print(pop_result)
 
 def main():
-    objective_compare(RPCObjective())
-    #objective_compare(RPCCombObjective(10,5))
+    #objective_compare(RPCObjective())
+    objective_compare(RPCCombObjective(10,5))
 
 if __name__ == "__main__":
     main()
