@@ -1,14 +1,13 @@
 import numpy as np
 import random
 import copy
-import nashpy
+from .nash_finder import p1_solution,p2_solution
 
 
 def calc_nash(objective,player):
-    # objective += np.random.uniform(low=-0.01,high=0.01,size=objective.shape)
-    nashgame = nashpy.Game(objective)
-    equilibria = list(nashgame.support_enumeration())[0]
-    return equilibria
+    sol_finder = p1_solution if player == 0 else p2_solution
+    support = sol_finder(objective)
+    return support
 
 
 # class NashChoiceObjective:
