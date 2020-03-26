@@ -155,7 +155,7 @@ class FictitiousPertPopulation(SelfPlayPertPopulation):
         return random.choice(self.main_agents)
 
 
-class NashPertPopulation(SelfPlayPertPopulation):
+class NashPertPopulation(HomogenousPopulation):
     def __init__(self,my_objective,NUM_PERTS=10,NUM_EVALS=10,POP_SIZE=10):
         starter = my_objective.random_response()
         self.current_pop = [starter.random_alt() for _ in range(POP_SIZE)]
@@ -164,7 +164,7 @@ class NashPertPopulation(SelfPlayPertPopulation):
         self.NUM_EVALS = NUM_EVALS
         self.NUM_PERTS = NUM_PERTS
         self.eval_alloc = EvalAllocator(NUM_EVALS)
-        #self.eval_matrix = np.zeros([self.POP_SIZE,self.POP_SIZE])
+        self.eval_matrix = np.zeros([self.POP_SIZE,self.POP_SIZE])
         self.queue_matrix_evals()
 
     def queue_matrix_evals(self):
@@ -180,9 +180,7 @@ class NashPertPopulation(SelfPlayPertPopulation):
         self.eval_alloc.add_tasks(tasks)
 
     def recalc_nash(self):
-        assert np.all(np.greater(self.eval_counts,self.NUM_EVALS)), "not enough evals for nash recalc"
-        value_matrix = self.eval_counts/self.eval_value_sum
-        self.nash_support = p1_solution(value_matrix)
+        self.nash_support = p1_solution(self.eval_matrix)
 
     def evaluate_sample(self):
         return BasicGamesAgent(random.choices(self.current_pop,weights=self.nash_support)[0])
@@ -198,6 +196,7 @@ class NashPertPopulation(SelfPlayPertPopulation):
                     assert name == t0name
                     p1,p2 = data
                     self.eval_matrix[p1][p2] = rew
+                self.recalc_nash()
                 self.queue_pop_evals()
             elif t0name == "learn":
                 pop_values = [[0 for _ in range(self.NUM_PERTS)] for choice in self.current_pop]
@@ -213,16 +212,26 @@ class NashPertPopulation(SelfPlayPertPopulation):
                 assert False, t0name
 
     def train_sample(self):
-        # if self.eval_alloc.all_allocated():
-        #     return None
         name,data = task = self.eval_alloc.next_task()
         if name == "matrix":
             p1,p2 = data
             return [BasicGamesAgent(self.current_pop[p1]),BasicGamesAgent(self.current_pop[p2])],task
         else:
             p1,pert = data
-            return [BasicGamesAgent(self.pop_alts[p1][pert]),self.evaluate_sample()],task
+            return [BasicGamesAgent(self.pop_alts[p1][pert]),self.pop_alt_compare(p1)],task
+
+    def pop_alt_compare(self,pop_alt_idx):
+        return self.evaluate_sample()
 
     def addExperiences(self,info,agents,result,observations,actions):
         self.eval_alloc.place_eval(info,result)
         self.handle_task_completion()
+
+class RectifiedNashPertPop(NashPertPopulation):
+    def pop_alt_compare(self,pop_alt_idx):
+        win_val = np.maximum(0,self.eval_matrix[pop_alt_idx])
+        support_val = self.nash_support
+        target_mag = win_val * support_val
+        target_mag /= (np.sum(target_mag)+1e-10)
+        compare_choice = random.choices(self.current_pop,weights=target_mag)[0]
+        return BasicGamesAgent(compare_choice)

@@ -4,7 +4,7 @@ from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObje
 from solvers.choicemixtures import NashMixture,RectifiedNashMixture, \
                                 WeaknessesMixture,UniformMixture
 from solvers.opt_solver import OptRepPopulation
-from solvers.local_pert_solver import SelfPlayPertPopulation,FictitiousPertPopulation,NashPertPopulation
+from solvers.local_pert_solver import SelfPlayPertPopulation,FictitiousPertPopulation,NashPertPopulation,RectifiedNashPertPop
 from solvers.nash_finder import zero_sum_asymetric_nash
 import numpy as np
 
@@ -65,11 +65,11 @@ def objective_compare(objective):
     env = SingleStepEnv(objective)
     pop2 = OptRepPopulation(objective,UniformMixture(objective))
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    pop1 = NashPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    pop1 = RectifiedNashPertPop(objective)#objective,RectifiedNashMixture(objective))
     num_iters = 100
     game_repeats = 1
     compare_iters = 300
-    train_pop(env,pop1,num_iters*100,game_repeats)
+    train_pop(env,pop1,num_iters*1000,game_repeats)
     train_pop(env,pop2,num_iters,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
     print("pop1")
