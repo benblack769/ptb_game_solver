@@ -8,7 +8,7 @@ def p1_solution(matrix):
     c = np.ones(sizex)
     A_ub = -matrix
     b_ub = -np.ones(sizey)
-    u = scipy.optimize.linprog(c,A_ub=A_ub,b_ub=b_ub).x
+    u = scipy.optimize.linprog(c,A_ub=A_ub,b_ub=b_ub,method="revised simplex").x
     probs = u / np.sum(u)
     return probs
 

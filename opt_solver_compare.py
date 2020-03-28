@@ -7,6 +7,8 @@ from solvers.opt_solver import OptRepPopulation
 from solvers.local_pert_solver import SelfPlayPertPopulation,FictitiousPertPopulation,NashPertPopulation,RectifiedNashPertPop
 from solvers.nash_finder import zero_sum_asymetric_nash
 import numpy as np
+import multiprocessing
+import random
 
 def get_single_game_score(env,agents,NUM_PLAYERS=2):
     env.reset()
@@ -56,28 +58,38 @@ def compare_populations(env,pop1,pop2,ITERS=1000,NUM_PLAYERS=2):
     return avg_scores
 
 def objective_compare(objective):
+    # random seed set for correct multiprocessing
+    np.random.seed(random.randrange(1<<31))
+
     env = SingleStepEnv(objective)
     pop2 = OptRepPopulation(objective,UniformMixture(objective))
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
     pop1 = RectifiedNashPertPop(objective)#objective,RectifiedNashMixture(objective))
-    pop2 = NashPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    num_iters = 10
+    #pop2 = NashPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    num_iters = 30
     game_repeats = 1
     compare_iters = 300
-    train_pop(env,pop1,num_iters*1000,game_repeats)
-    print("trained pop1")
-    train_pop(env,pop2,num_iters*1000,game_repeats)
+    train_pop(env,pop1,num_iters*100,game_repeats)
+    #p#rint("trained pop1")
+    train_pop(env,pop2,num_iters,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
-    print("pop1")
-    print("\n".join([str(pop1.evaluate_sample().my_choice) for _ in range(15)]))
-    print("pop2")
-    print("\n".join([str(pop2.evaluate_sample().my_choice) for _ in range(15)]))
-    print(pop_result)
+    return pop_result
+    #print("pop1")
+    #print("\n".join([str(pop1.evaluate_sample().my_choice) for _ in range(15)]))
+    #print("pop2")
+    #print("\n".join([str(pop2.evaluate_sample().my_choice) for _ in range(15)]))
+    #print(pop_result)
+
+def objective_multi_compare(objective,num_reruns):
+    cpu_count = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(cpu_count)
+    results = pool.map(objective_compare,[objective for _ in range(num_reruns)])
+    return np.mean(results),np.std(results)/np.sqrt(num_reruns)
 
 def main():
     #objective_compare(RPCObjective())
     #objective_compare(RPCCombObjective(10,5))
-    objective_compare(BlottoCombObjective(7,10))
+    print(objective_multi_compare(BlottoCombObjective(7,10),48))
 
 if __name__ == "__main__":
     main()
