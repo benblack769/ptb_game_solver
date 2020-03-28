@@ -1,5 +1,5 @@
 from envs.optimum_known.env import SingleStepEnv
-from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObjective
+from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObjective,BlottoCombObjective
 
 from solvers.choicemixtures import NashMixture,RectifiedNashMixture, \
                                 WeaknessesMixture,UniformMixture
@@ -42,12 +42,6 @@ def evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=10,EVALS=1,NUM_PLAYERS=2):
                     for pop2_samp in pop2_samps]
 
     eval,pop1_support,pop2_support = zero_sum_asymetric_nash(eval_matrix)
-    # print(np.array(eval_matrix))
-    # print([str(samp.my_choice) for samp in pop1_samps])
-    # print([str(samp.my_choice) for samp in pop2_samps])
-    # print([str(pop2.evaluate_sample().my_choice) for _ in range(15)])
-    # print(pop1_support)
-    # print(pop2_support)
     return eval
 
 def compare_populations(env,pop1,pop2,ITERS=1000,NUM_PLAYERS=2):
@@ -66,11 +60,13 @@ def objective_compare(objective):
     pop2 = OptRepPopulation(objective,UniformMixture(objective))
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
     pop1 = RectifiedNashPertPop(objective)#objective,RectifiedNashMixture(objective))
-    num_iters = 100
+    pop2 = NashPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    num_iters = 10
     game_repeats = 1
     compare_iters = 300
     train_pop(env,pop1,num_iters*1000,game_repeats)
-    train_pop(env,pop2,num_iters,game_repeats)
+    print("trained pop1")
+    train_pop(env,pop2,num_iters*1000,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
     print("pop1")
     print("\n".join([str(pop1.evaluate_sample().my_choice) for _ in range(15)]))
@@ -80,7 +76,8 @@ def objective_compare(objective):
 
 def main():
     #objective_compare(RPCObjective())
-    objective_compare(RPCCombObjective(10,5))
+    #objective_compare(RPCCombObjective(10,5))
+    objective_compare(BlottoCombObjective(7,10))
 
 if __name__ == "__main__":
     main()

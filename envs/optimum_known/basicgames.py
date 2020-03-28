@@ -14,7 +14,8 @@ class RPCChoice:
     __str__ = __repr__
 
 def normalize(vec):
-    return vec / np.sqrt(np.sum(np.square(vec)))
+    assert np.all(np.greater_equal(vec,0))
+    return vec / np.sum(vec)
 
 class DiskChoice:
     def __init__(self,featurevec):
@@ -40,7 +41,20 @@ class BlottoChoice:
     def __init__(self,alloc_choices):
         self.feature = alloc_choices
     def random_choice(game_size):
-        return normalize(np.random.normal(size=game_size))
+        return BlottoChoice(normalize(np.random.exponential(size=game_size)))
+    def random_alt(self):
+        new_feature = np.copy(self.feature)
+        SUB_VAL = 1./(4*len(new_feature))
+        sub_idx = random.randrange(len(new_feature))
+        add_idx = random.randrange(len(new_feature))
+        transfer_val = min(new_feature[sub_idx],SUB_VAL)
+        new_feature[sub_idx] -= transfer_val
+        new_feature[add_idx] += transfer_val
+        assert  0.9999 < np.sum(new_feature) < 1.0001
+        return BlottoChoice(new_feature)
+    def __repr__(self):
+        return str(self.feature)
+    __str__ = __repr__
 
 class CombChoice:
     def __init__(self,featurevec):
@@ -73,6 +87,23 @@ class RPC_CombChoice:
         return "rpc: {}, comb: {}".format(self.rpc,self.comb)
     __str__ = __repr__
 
+class Blotto_CombChoice:
+    def __init__(self,comb,blotto):
+        self.num_choices = comb.num_choices
+        self.game_size = len(blotto.feature)
+        self.comb = comb
+        self.blotto = blotto
+    def random_choice(num_choices,game_size):
+        return Blotto_CombChoice(CombChoice.random_choice(num_choices),BlottoChoice.random_choice(game_size))
+    def random_alt(self):
+        if random.random() < 0.5:
+            return Blotto_CombChoice(self.comb,self.blotto.random_alt())
+        else:
+            return Blotto_CombChoice(self.comb.random_alt(),self.blotto)
+    def __repr__(self):
+        return "blotto: {}, comb: {}".format(self.blotto,self.comb)
+    __str__ = __repr__
+
 class CombObjective:
     def __init__(self,num_combs):
         self.num_combs = num_combs
@@ -97,6 +128,20 @@ class RPCObjective:
     def random_response(self):
         return RPCChoice.random_choice()
 
+class BlottoObjective:
+    def __init__(self,game_size):
+        self.game_size = game_size
+    def evaluate(self,choicep1,choicep2):
+        assert self.game_size == len(choicep1.feature)
+        p1_score = np.sum(np.greater(choicep1.feature,choicep2.feature).astype(np.int32))
+        p2_score = np.sum(np.less(choicep1.feature,choicep2.feature).astype(np.int32))
+        anti_symetric_score = p1_score - p2_score
+        return anti_symetric_score
+    def all_opt_choices(self):
+        return [BlottoChoice.random_choice() for c in range(300)]
+    def random_response(self):
+        return BlottoObjective.random_choice()
+
 class RPCCombObjective:
     def __init__(self,num_combs,mul_val):
         self.num_combs = num_combs
@@ -115,3 +160,24 @@ class RPCCombObjective:
 
     def random_response(self):
         return RPC_CombChoice.random_choice(self.num_combs)
+
+class BlottoCombObjective:
+    def __init__(self,num_combs,game_size):
+        self.game_size = game_size
+        self.num_combs = num_combs
+        self.comb_objectives = [CombObjective(num_combs) for _ in range(game_size)]
+        self.blotto = BlottoObjective(game_size)
+
+    def evaluate(self,choicep1,choicep2):
+        comb_scores_p1 = np.array([obj.sing_eval(choicep1.comb) for obj in self.comb_objectives])
+        comb_scores_p2 = np.array([obj.sing_eval(choicep2.comb) for obj in self.comb_objectives])
+        p1_score = (np.greater(choicep1.blotto.feature,choicep2.blotto.feature).astype(np.int32))
+        p2_score = (np.less(choicep1.blotto.feature,choicep2.blotto.feature).astype(np.int32))
+        blotto_score = p1_score*comb_scores_p1 - p2_score*comb_scores_p2
+        return np.sum(blotto_score)
+
+    def all_opt_choices(self):
+        return [Blotto_CombChoice(CombChoice.random_choice(self.num_combs),BlottoChoice.random_choice(self.game_size)) for _ in range(100)]
+
+    def random_response(self):
+        return Blotto_CombChoice.random_choice(self.num_combs,self.game_size)
