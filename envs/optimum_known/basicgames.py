@@ -113,7 +113,7 @@ class CombObjective:
     def evaluate(self,choice1,choice2):
         return self.sing_eval(choice1) - self.sing_eval(choice2)
     def all_opt_choices(self):
-        return self.match_choice
+        return [self.match_choice]
     def random_response(self):
         return CombChoice.random_choice(self.num_combs)
 

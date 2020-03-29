@@ -66,19 +66,22 @@ def objective_compare(objective):
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
     pop1 = RectifiedNashPertPop(objective)#objective,RectifiedNashMixture(objective))
     #pop2 = NashPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    num_iters = 30
+    num_iters = 100
     game_repeats = 1
     compare_iters = 300
     train_pop(env,pop1,num_iters*100,game_repeats)
     #p#rint("trained pop1")
-    train_pop(env,pop2,num_iters,game_repeats)
+    train_pop(env,pop2,num_iters*1,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
-    return pop_result
-    #print("pop1")
-    #print("\n".join([str(pop1.evaluate_sample().my_choice) for _ in range(15)]))
-    #print("pop2")
-    #print("\n".join([str(pop2.evaluate_sample().my_choice) for _ in range(15)]))
-    #print(pop_result)
+
+    print([obj.match_choice for obj in objective.comb_objectives])
+    print("pop1")
+    print("\n".join([f"{pop1.current_pop[i]},  {pop1.nash_support[i]}" for i in range(10)]))
+    print("pop2")
+    #print()
+    #print("\n".join([f"{pop2.current_pop[i]},  {pop2.nash_support[i]}" for i in range(10)]))
+    #print("\n".join([str(pop2.evaluate_sample().my_choice) for _ in range(10)]))
+    return (pop_result)
 
 def objective_multi_compare(objective,num_reruns):
     cpu_count = multiprocessing.cpu_count()
@@ -89,7 +92,11 @@ def objective_multi_compare(objective,num_reruns):
 def main():
     #objective_compare(RPCObjective())
     #objective_compare(RPCCombObjective(10,5))
-    print(objective_multi_compare(BlottoCombObjective(7,10),48))
+    #print(objective_compare(BlottoCombObjective(7,10),24))
+    obj = RPCCombObjective(10,5)
+    #obj = CombObjective(25)
+    print(objective_compare(obj))
+    #print(obj.match_choice)
 
 if __name__ == "__main__":
     main()

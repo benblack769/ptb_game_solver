@@ -207,6 +207,7 @@ class NashPertPopulation(HomogenousPopulation):
                     pop_values[p1][pert] += rew
                 for i in range(self.POP_SIZE):
                     self.current_pop[i] = self.pop_alts[i][np.argmax(pop_values[i])]
+
                 self.queue_matrix_evals()
             else:
                 assert False, t0name
@@ -232,6 +233,7 @@ class RectifiedNashPertPop(NashPertPopulation):
         win_val = np.maximum(0,self.eval_matrix[pop_alt_idx])
         support_val = self.nash_support
         target_mag = win_val * support_val
-        target_mag /= (np.sum(target_mag)+1e-10)
+        sum_mag = np.sum(target_mag)
+        target_mag = target_mag/sum_mag if sum_mag > 0 else self.nash_support
         compare_choice = random.choices(self.current_pop,weights=target_mag)[0]
         return BasicGamesAgent(compare_choice)
