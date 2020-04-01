@@ -97,6 +97,7 @@ class PertLearner:
 
     def init_perts(self):
         self.pert_agents = [self.main_choice.random_alt() for _ in range(self.NUM_PERTS)]
+        self.pert_agents[0] = self.main_choice
         tasks = [(agent) for agent in range(self.NUM_PERTS)]
         self.eval_alloc.add_tasks(tasks)
 
@@ -176,14 +177,19 @@ class NashPertPopulation(HomogenousPopulation):
 
     def queue_pop_evals(self):
         self.pop_alts = [[choice.random_alt() for _ in range(self.NUM_PERTS)] for choice in self.current_pop]
+        for i in range(self.POP_SIZE):
+            self.pop_alts[i][0] = self.current_pop[i]
         tasks = [("learn",(p,pert)) for p in range(self.POP_SIZE) for pert in range(self.NUM_PERTS)]
         self.eval_alloc.add_tasks(tasks)
 
     def recalc_nash(self):
         self.nash_support = p1_solution(self.eval_matrix)
 
-    def evaluate_sample(self):
+    def nash_sample(self):
         return BasicGamesAgent(random.choices(self.current_pop,weights=self.nash_support)[0])
+
+    def evaluate_sample(self):
+        return BasicGamesAgent(random.choice(self.current_pop))
 
     def handle_task_completion(self):
         if self.eval_alloc.all_finished():
@@ -222,7 +228,7 @@ class NashPertPopulation(HomogenousPopulation):
             return [BasicGamesAgent(self.pop_alts[p1][pert]),self.pop_alt_compare(p1)],task
 
     def pop_alt_compare(self,pop_alt_idx):
-        return self.evaluate_sample()
+        return self.nash_sample()
 
     def addExperiences(self,info,agents,result,observations,actions):
         self.eval_alloc.place_eval(info,result)
@@ -237,3 +243,40 @@ class RectifiedNashPertPop(NashPertPopulation):
         target_mag = target_mag/sum_mag if sum_mag > 0 else self.nash_support
         compare_choice = random.choices(self.current_pop,weights=target_mag)[0]
         return BasicGamesAgent(compare_choice)
+
+class SoftPertPop(HomogenousPopulation):
+    '''
+    The idea behind soft solvers is to replace the strict evaluations of the
+    nash based solvers with estiated values and resplace the techniques with
+    techniques that are more suited towards using these estimated values.
+
+    In particular, the matrix of reward payoffs has a row for each agent
+
+    [r1,r2,r3,...,rn]
+    Now, each agent in this reward vector also has an overall strength,
+    and you have a strength relative to your opponent's overall strength that indicates
+    your counter value.
+
+    Finally, you can use these rescaled values compared to the other values in your reward list
+
+    in particular, you have:
+
+    Uniform: weighted uniformly
+    Nash: weighted by how well you do
+    Rectfified nash: weighted by your rescaled value (i.e. how well you do compared to others)
+
+    However, there is a lot more you can do.
+
+    You can consider errors in the reward matrix, and train based off UCB or Expected improvement.
+
+    You can look at rate of change of evaluations.
+
+    A delta matrix
+    [d1,d2,...,dn]
+    for the change in r over time. This will have high error, so need to watch that.
+
+    But the delta vector is also informative. You can train against agents you
+    have relatively high delta against.
+    '''
+    def __init__(self):
+        pass

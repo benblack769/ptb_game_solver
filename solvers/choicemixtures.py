@@ -43,8 +43,8 @@ class NashMixture:
             self.nash_support = calc_nash(self.objective_matrix,player)
 
     def sample(self,player):
-        strategy_support = self.nash_support[player]
-        return random.choices(self.player_strategies[player],weights=strategy_support)[0]
+        #strategy_support = self.nash_support[player]
+        return random.choice(self.player_strategies[player])#,weights=strategy_support)[0]
 
     def value_of(self,player,strategy):
         strategy_support = self.nash_support[player]

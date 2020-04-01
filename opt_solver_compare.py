@@ -1,5 +1,5 @@
 from envs.optimum_known.env import SingleStepEnv
-from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObjective,BlottoCombObjective
+from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObjective,BlottoCombObjective,BlottoObjective
 
 from solvers.choicemixtures import NashMixture,RectifiedNashMixture, \
                                 WeaknessesMixture,UniformMixture
@@ -64,8 +64,8 @@ def objective_compare(objective):
     env = SingleStepEnv(objective)
     pop2 = OptRepPopulation(objective,UniformMixture(objective))
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    pop1 = RectifiedNashPertPop(objective)#objective,RectifiedNashMixture(objective))
-    #pop2 = NashPertPopulation(objective)#objective,RectifiedNashMixture(objective))
+    pop1 = RectifiedNashPertPop(objective,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
+    #pop2 = NashPertPopulation(objective,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=25)#objective,RectifiedNashMixture(objective))
     num_iters = 100
     game_repeats = 1
     compare_iters = 300
@@ -74,7 +74,7 @@ def objective_compare(objective):
     train_pop(env,pop2,num_iters*1,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
 
-    print([obj.match_choice for obj in objective.comb_objectives])
+    #print([obj.match_choice for obj in objective.comb_objectives])
     print("pop1")
     print("\n".join([f"{pop1.current_pop[i]},  {pop1.nash_support[i]}" for i in range(10)]))
     print("pop2")
@@ -93,9 +93,11 @@ def main():
     #objective_compare(RPCObjective())
     #objective_compare(RPCCombObjective(10,5))
     #print(objective_compare(BlottoCombObjective(7,10),24))
-    obj = RPCCombObjective(10,5)
+    #obj = RPCCombObjective(10,5)
+    obj = BlottoObjective(10)
     #obj = CombObjective(25)
-    print(objective_compare(obj))
+    #print(objective_compare(obj))
+    print(objective_multi_compare(obj,24*2))
     #print(obj.match_choice)
 
 if __name__ == "__main__":

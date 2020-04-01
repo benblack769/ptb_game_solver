@@ -44,7 +44,7 @@ class BlottoChoice:
         return BlottoChoice(normalize(np.random.exponential(size=game_size)))
     def random_alt(self):
         new_feature = np.copy(self.feature)
-        SUB_VAL = 1./(4*len(new_feature))
+        SUB_VAL = random.random()/(4.*len(new_feature))
         sub_idx = random.randrange(len(new_feature))
         add_idx = random.randrange(len(new_feature))
         transfer_val = min(new_feature[sub_idx],SUB_VAL)
@@ -138,9 +138,9 @@ class BlottoObjective:
         anti_symetric_score = p1_score - p2_score
         return anti_symetric_score
     def all_opt_choices(self):
-        return [BlottoChoice.random_choice() for c in range(300)]
+        return [BlottoChoice.random_choice(self.game_size) for c in range(300)]
     def random_response(self):
-        return BlottoObjective.random_choice()
+        return BlottoChoice.random_choice(self.game_size)
 
 class RPCCombObjective:
     def __init__(self,num_combs,mul_val):
