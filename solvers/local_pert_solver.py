@@ -2,7 +2,7 @@ from .agents import BaseAgent
 from .populations import HomogenousPopulation
 import numpy as np
 import random
-from .nash_finder import p1_solution
+from .nash_finder import p1_solution, graph_opt_finder
 
 class BasicGamesAgent(BaseAgent):
     '''
@@ -293,11 +293,15 @@ class SoftPertPop(NashPertPopulation):
     Regulaized: high flow edges are penalized
     Objective: maximizes reward for source agent.
     '''
-    def __init__(self,starter,*args,**kwargs):
-        super().__init__(starter,*args,**kwargs)
+    def __init__(self,starter,REG_VAL=0.03,NUM_PERTS=10,NUM_EVALS=10,POP_SIZE=10):
+        super().__init__(starter,NUM_PERTS,NUM_EVALS,POP_SIZE)
+        self.REG_VAL = REG_VAL
 
     def recalc_nash(self):
-        self.nash_support = p1_solution(self.eval_matrix)
+        self.nash_support = np.ones(self.POP_SIZE)/self.POP_SIZE
+        self.response_mat = graph_opt_finder(self.eval_matrix,self.REG_VAL)
 
     def pop_alt_compare(self,pop_alt_idx):
-        a
+        response_probs = self.response_mat[pop_alt_idx]
+        compare_choice = random.choices(self.current_pop,weights=response_probs)[0]
+        return BasicGamesAgent(compare_choice)

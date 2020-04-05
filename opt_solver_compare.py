@@ -4,7 +4,7 @@ from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObje
 from solvers.choicemixtures import NashMixture,RectifiedNashMixture, \
                                 WeaknessesMixture,UniformMixture
 from solvers.opt_solver import OptRepPopulation
-from solvers.local_pert_solver import SelfPlayPertPopulation,FictitiousPertPopulation,NashPertPopulation,RectifiedNashPertPop
+from solvers.local_pert_solver import SelfPlayPertPopulation,FictitiousPertPopulation,NashPertPopulation,RectifiedNashPertPop,SoftPertPop
 from solvers.nash_finder import zero_sum_asymetric_nash
 import numpy as np
 import multiprocessing
@@ -62,16 +62,18 @@ def objective_compare(objective):
     np.random.seed(random.randrange(1<<31))
 
     env = SingleStepEnv(objective)
-    pop2 = OptRepPopulation(objective,UniformMixture(objective))
+    starter = objective.random_response()
+    #pop2 = OptRepPopulation(objective,UniformMixture(objective))
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    pop1 = RectifiedNashPertPop(objective,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
+    pop1 = SoftPertPop(starter,REG_VAL=0.03,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
+    pop2 = RectifiedNashPertPop(starter,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
     #pop2 = NashPertPopulation(objective,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=25)#objective,RectifiedNashMixture(objective))
     num_iters = 100
     game_repeats = 1
     compare_iters = 300
     train_pop(env,pop1,num_iters*100,game_repeats)
     #p#rint("trained pop1")
-    train_pop(env,pop2,num_iters*1,game_repeats)
+    train_pop(env,pop2,num_iters*100,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
 
     #print([obj.match_choice for obj in objective.comb_objectives])
@@ -94,7 +96,7 @@ def main():
     #objective_compare(RPCCombObjective(10,5))
     #print(objective_compare(BlottoCombObjective(7,10),24))
     #obj = RPCCombObjective(10,5)
-    obj = BlottoObjective(10)
+    obj = BlottoCombObjective(7,10)
     #obj = CombObjective(25)
     #print(objective_compare(obj))
     print(objective_multi_compare(obj,24*2))

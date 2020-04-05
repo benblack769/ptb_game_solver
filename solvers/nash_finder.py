@@ -57,7 +57,7 @@ def graph_opt_finder(matrix,reg_val=0.001):
         - x dimention solution
         - y dimention solution
     '''
-
+    matrix = np.asarray(matrix,dtype=np.float32)
     ysize,xsize = matrix.shape
     assert ysize == xsize, "matrix needs to be square"
     size = xsize
