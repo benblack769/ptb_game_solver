@@ -129,8 +129,8 @@ class PertLearner:
 
 
 class SelfPlayPertPopulation(HomogenousPopulation):
-    def __init__(self,my_objective,NUM_PERTS=10,NUM_EVALS=10):
-        self.main_agents = [my_objective.random_response()]
+    def __init__(self,starter,NUM_PERTS=10,NUM_EVALS=10):
+        self.main_agents = [starter]
         self.cur_learner = PertLearner(self.main_agent(),NUM_PERTS,NUM_EVALS)
         self.NUM_PERTS = NUM_PERTS
         self.NUM_EVALS = NUM_EVALS
@@ -157,8 +157,7 @@ class FictitiousPertPopulation(SelfPlayPertPopulation):
 
 
 class NashPertPopulation(HomogenousPopulation):
-    def __init__(self,my_objective,NUM_PERTS=10,NUM_EVALS=10,POP_SIZE=10):
-        starter = my_objective.random_response()
+    def __init__(self,starter,NUM_PERTS=10,NUM_EVALS=10,POP_SIZE=10):
         self.current_pop = [starter.random_alt() for _ in range(POP_SIZE)]
         self.nash_support = np.ones(POP_SIZE)/POP_SIZE
         self.POP_SIZE = POP_SIZE
@@ -244,7 +243,7 @@ class RectifiedNashPertPop(NashPertPopulation):
         compare_choice = random.choices(self.current_pop,weights=target_mag)[0]
         return BasicGamesAgent(compare_choice)
 
-class SoftPertPop(HomogenousPopulation):
+class SoftPertPop(NashPertPopulation):
     '''
     The idea behind soft solvers is to replace the strict evaluations of the
     nash based solvers with estiated values and resplace the techniques with
@@ -277,6 +276,28 @@ class SoftPertPop(HomogenousPopulation):
 
     But the delta vector is also informative. You can train against agents you
     have relatively high delta against.
+
+    Nash is a not ideal measure of overall strength, because it is poorly regularized
+
+    A better way is to regularize it like this:
+
+    p^T A p + c |p|^2
+
+    With many agents or heterogenous agents, you want a matching scheme:
+
+    a_i matches with b_j to the degree that b_j is better for a_i relative to other bs.
+
+    Gives a bipartite (or n-partite in general case) graph of different agents with weights pointing to each other:
+
+    Restrictions: flow in to node equals flow out (equals 1?)
+    Regulaized: high flow edges are penalized
+    Objective: maximizes reward for source agent.
     '''
-    def __init__(self):
-        pass
+    def __init__(self,starter,*args,**kwargs):
+        super().__init__(starter,*args,**kwargs)
+
+    def recalc_nash(self):
+        self.nash_support = p1_solution(self.eval_matrix)
+
+    def pop_alt_compare(self,pop_alt_idx):
+        a
