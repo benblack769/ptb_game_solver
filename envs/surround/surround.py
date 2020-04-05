@@ -8,19 +8,27 @@ from ..basic_env import BasicEnv
 EMPTY = 0
 FULL = 1
 
-def action_to_dir(action,olddir):
+def action_to_dir(action,olddir,player):
     if action == 0:
         return olddir
     else:
         if action == 1:
-            return (-1,0)
-        if action == 2:
-            return (1,0)
-        if action == 3:
-            return (0,1)
-        if action == 4:
-            return (0,-1)
-    assert False,"bad action to Surround"
+            dir = (-1,0)
+        elif action == 2:
+            dir = (1,0)
+        elif action == 3:
+            dir = (0,1)
+        elif action == 4:
+            dir = (0,-1)
+        else:
+            assert False,"bad action to Surround"
+        # flip direction for player 1, so the players are symmetric
+        flipped_dir = dir if player == 0 else flip_dir(dir)
+        return flipped_dir
+
+def flip_dir(dir):
+    x,y = dir
+    return (-x,y)
 
 def add(p1,p2):
     x1,y1 = p1
@@ -29,7 +37,7 @@ def add(p1,p2):
 
 
 class Surround(BasicEnv):
-    def __init__(self,BOARD_SIZE=(40,20),VIEW_SIZE=5):
+    def __init__(self,BOARD_SIZE=(40,20),VIEW_SIZE=15):
         self.board_size = BOARD_SIZE
         self.view_size = VIEW_SIZE
         self.board = []
@@ -67,7 +75,7 @@ class Surround(BasicEnv):
 
         assert len(player_actions) == 2
         for player, action in enumerate(player_actions):
-            self.dirs[player] = new_dir = action_to_dir(action,self.dirs[player])
+            self.dirs[player] = new_dir = action_to_dir(action,self.dirs[player],player)
 
         for p in range(2):
             ox,oy = self.posses[p]
@@ -110,9 +118,15 @@ class Surround(BasicEnv):
         ox,oy = self.posses[player^1]
         offx,offy = (ox-px+v,oy-py+v)
         if 0 <= offx <= 2*v and 0 <= offy <= 2*v:
-            pos_panel_other[offx,offy] = 1
+            pos_panel_other[offy,offx] = 1
 
         all_pannels = np.stack([pan1,pos_panel_cur,pos_panel_other],axis=0)
+        print(all_pannels.shape)
+
+        # flip pannels for player 1
+        if player:
+            all_pannels = all_pannels[:,:,::-1]
+
         return all_pannels
 
     def render(self):
@@ -140,6 +154,8 @@ class Surround(BasicEnv):
             for y in range(max(0,py-v),min(by,py+v+1)):
                 for x in range(max(0,px-v),min(bx,px+v+1)):
                     hidden_screen.fill(color+(32,), (x*BP,y*BP,BP,BP))
+
+        for (px,py),color in zip(self.posses,colors):
             hidden_screen.fill(color, (px*BP,py*BP,BP,BP))
 
         screen.blit(hidden_screen, (0,0))

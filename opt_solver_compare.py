@@ -63,17 +63,17 @@ def objective_compare(objective):
 
     env = SingleStepEnv(objective)
     starter = objective.random_response()
-    #pop2 = OptRepPopulation(objective,UniformMixture(objective))
+    pop2 = OptRepPopulation(objective,UniformMixture(objective))
     #pop2 = SelfPlayPertPopulation(objective)#objective,RectifiedNashMixture(objective))
-    pop1 = SoftPertPop(starter,REG_VAL=0.03,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
-    pop2 = RectifiedNashPertPop(starter,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
+    pop1 = SoftPertPop(starter,REG_VAL=0.03,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=25)#objective,RectifiedNashMixture(objective))
+    #pop2 = RectifiedNashPertPop(starter,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=10)#objective,RectifiedNashMixture(objective))
     #pop2 = NashPertPopulation(objective,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=25)#objective,RectifiedNashMixture(objective))
     num_iters = 100
     game_repeats = 1
     compare_iters = 300
-    train_pop(env,pop1,num_iters*100,game_repeats)
+    train_pop(env,pop1,num_iters*1000,game_repeats)
     #p#rint("trained pop1")
-    train_pop(env,pop2,num_iters*100,game_repeats)
+    train_pop(env,pop2,num_iters*1,game_repeats)
     pop_result = evaluate_zero_sum_pops(env,pop1,pop2,NUM_SAMPS=4)
 
     #print([obj.match_choice for obj in objective.comb_objectives])
