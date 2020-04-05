@@ -30,7 +30,7 @@ def zero_sum_asymetric_nash(matrix):
     game_eval = np.dot(p2_sol,np.dot(matrix,p1_sol))
     return game_eval,p1_sol,p2_sol
 
-def graph_opt_finder(matrix,reg_val=1.):
+def graph_opt_finder(matrix,reg_val=0.001):
     '''
     finds the graph optimal value for a two player game
 
@@ -69,38 +69,47 @@ def graph_opt_finder(matrix,reg_val=1.):
     #for x in range(10):
     def closure():
         optimizer.zero_grad()
-        O = F.softmax(logit_matrix)
+        O = F.softmax(logit_matrix,dim=1)
         A = value_matrix
-        node_weights = (1./(torch.matmul(O, torch.ones([size]))))
-        main_rewards = torch.sum(torch.matmul((A * O), node_weights))
+        node_weights_in = (1./(1e-7+torch.matmul(O, torch.ones([size]))))
+        node_weights_out = (1./(1e-7+torch.matmul(torch.ones([size]), O)))
+        in_rewards = torch.sum(torch.matmul((A * O), node_weights_in))
+        out_costs = 50*torch.sum(node_weights_out**2)
         reg_cost = reg_val * torch.sum(logit_matrix**2)
 
-        loss = reg_cost - main_rewards
+        loss = reg_cost - in_rewards + out_costs
         #print(loss)
         loss.backward()
         return loss
-    optimizer.step(closure)
+    for i in range(15):
+        optimizer.step(closure)
 
-    res = F.softmax(logit_matrix).detach().numpy()
+    res = F.softmax(logit_matrix,dim=1).detach().numpy()
     return res
 
 
 if __name__ == "__main__":
     test_matrix1 = np.array([
+        [0,1,-1],
         [-1,0,1],
         [1,-1,0],
-        [0,1,-1],
-    ])
+    ],dtype=np.float32)
     test_matrix2 = np.array([
         [0,0.5,-1,1],
         [-0.5,0,1,0.5],
         [1,-1,0,-1],
-    ])
+        [2,-3,0.1,0.5],
+    ],dtype=np.float32)
     test_matrix3 = np.array([
-        [0,0.5,-1],
-        [-0.5,0,1],
+        [0,0.1,-1],
+        [-0.1,0,1],
         [1,-1,0],
+    ],dtype=np.float32)
+    test_matrix4 = np.array([
+        [0,1],
+        [1,0],
     ],dtype=np.float32)
     print(graph_opt_finder(test_matrix1,reg_val=0.1))
     print(graph_opt_finder(test_matrix3,reg_val=0.1))
-    print(graph_opt_finder(test_matrix2))
+    print(graph_opt_finder(test_matrix4,reg_val=0.001))
+    print(graph_opt_finder(test_matrix2,reg_val=0.1))
