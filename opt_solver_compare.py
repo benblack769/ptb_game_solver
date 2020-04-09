@@ -99,7 +99,7 @@ def evaluate_pop_vs(objective,compare_pop,arg_pop,train_iters):
 def evaluate_pop_vs_comp(tuple):
     return evaluate_pop_vs(*tuple)
 
-def generate_csv(objective, plot_pops, num_restarts, compare_pop, fname, MAX_ITERS=100000):
+def generate_csv(objective, plot_pops, num_restarts, compare_pop, fname, MAX_ITERS=150000):
     env = SingleStepEnv(objective)
     evals = []
     pop_name = []
@@ -122,7 +122,7 @@ def generate_csv(objective, plot_pops, num_restarts, compare_pop, fname, MAX_ITE
     avg_results = np.mean(results,axis=1)
     std_results = np.std(results,axis=1)/np.sqrt(num_restarts)
     pop_avg_result = np.transpose(avg_results)
-    pop_std_result = np.transpose(avg_results)
+    pop_std_result = np.transpose(std_results)
     sample = objective.random_response()
     pop_names = [pop_fact(sample).__class__.__name__ for pop_fact in plot_pops]
     std_names = [pop_name + "_std" for pop_name in pop_names]
@@ -150,11 +150,12 @@ def generate_csvs():
         train_pop(env,compare_pop,compare_train_iters,game_repeats)
 
         NUM_RESTARTS = 20
+        NUM_EVALS = 30
         for pop_size in [10, 25]:
             populations = [
-                lambda starter: SoftPertPop(starter,REG_VAL=0.03,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=pop_size),
-                lambda starter: RectifiedNashPertPop(starter,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=pop_size),
-                lambda starter: NashPertPopulation(starter,NUM_PERTS=10,NUM_EVALS=1,POP_SIZE=pop_size),
+                lambda starter: SoftPertPop(starter,REG_VAL=0.03,NUM_PERTS=10,NUM_EVALS=NUM_EVALS,POP_SIZE=pop_size),
+                lambda starter: RectifiedNashPertPop(starter,NUM_PERTS=10,NUM_EVALS=NUM_EVALS,POP_SIZE=pop_size),
+                lambda starter: NashPertPopulation(starter,NUM_PERTS=10,NUM_EVALS=NUM_EVALS,POP_SIZE=pop_size),
                 lambda starter: SelfPlayPertPopulation(starter),
                 lambda starter: FictitiousPertPopulation(starter),
             ]
