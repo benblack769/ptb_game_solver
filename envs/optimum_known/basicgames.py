@@ -116,6 +116,8 @@ class CombObjective:
         return [self.match_choice]
     def random_response(self):
         return CombChoice.random_choice(self.num_combs)
+    def __str__(self):
+        return "CombObjective_ncombs{}".format(self.num_combs)
 
 class RPCObjective:
     def __init__(self):
@@ -141,6 +143,8 @@ class BlottoObjective:
         return [BlottoChoice.random_choice(self.game_size) for c in range(300)]
     def random_response(self):
         return BlottoChoice.random_choice(self.game_size)
+    def __str__(self):
+        return "BlottoObjective_size{}".format(self.game_size)
 
 class RPCCombObjective:
     def __init__(self,num_combs,mul_val):
@@ -160,6 +164,10 @@ class RPCCombObjective:
 
     def random_response(self):
         return RPC_CombChoice.random_choice(self.num_combs)
+
+    def __str__(self):
+        return "RPCCombObjective_ncombs{}_rcpweight{}".format(self.num_combs, self.mul_val)
+
 
 class BlottoCombObjective:
     def __init__(self,num_combs,game_size):
@@ -181,3 +189,6 @@ class BlottoCombObjective:
 
     def random_response(self):
         return Blotto_CombChoice.random_choice(self.num_combs,self.game_size)
+
+    def __str__(self):
+        return "BlottoCombObjective_ncombs{}_blottosize{}".format(self.num_combs, self.game_size)
