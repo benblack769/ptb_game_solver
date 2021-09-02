@@ -4,6 +4,16 @@ class BasicEnv:
         sets up game with options
         '''
 
+    def action_spaces(self):
+        '''
+        return action spaces for environment
+        '''
+
+    def observation_spaces(self):
+        '''
+        return observation spaces for environment
+        '''
+
     def reset(self):
         '''
         resets game to initial state according to the options

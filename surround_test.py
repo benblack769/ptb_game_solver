@@ -6,7 +6,7 @@ import numpy as np
 
 pygame.init()
 
-# screen = pygame.display.set_mode([40*30,20*30])
+screen = pygame.display.set_mode([40*30,20*30])
 
 env = Surround()
 total_score = 0
@@ -22,11 +22,11 @@ while num_games < 10000:
         env.reset()
         #print(total_score/num_games)
 
-    #obss = [for p in range(2)]
-    # assert np.all(np.equal(env.observe(0),env.observe(1) ))
-    # cur_surface = env.render()
+    #obss = [env.observe(p) for p in range(2)]
+    assert np.all(np.equal(env.observe(0),env.observe(1) ))
+    cur_surface = env.render()
     # time.sleep(0.1)
     #
-    # screen.blit(cur_surface, (0,0))
-    #
-    # pygame.display.flip()
+    screen.blit(cur_surface, (0,0))
+
+    pygame.display.flip()

@@ -1,3 +1,6 @@
+import os
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
 from envs.optimum_known.env import SingleStepEnv
 from envs.optimum_known.basicgames import RPCCombObjective,RPCObjective,CombObjective,BlottoCombObjective,BlottoObjective
 
@@ -10,6 +13,8 @@ import numpy as np
 import multiprocessing
 import random
 import pandas as pd
+import torch
+torch.set_num_threads(1)
 
 def get_single_game_score(env,agents,NUM_PLAYERS=2):
     env.reset()
@@ -97,6 +102,7 @@ def evaluate_pop_vs(objective,compare_pop,arg_pop,train_iters):
     return pop_result
 
 def evaluate_pop_vs_comp(tuple):
+    torch.set_num_threads(1)
     return evaluate_pop_vs(*tuple)
 
 def generate_csv(objective, plot_pops, num_restarts, compare_pop, fname, MAX_ITERS=150000):

@@ -3,6 +3,7 @@ A Partially observable version of the old atari surround game
 '''
 import numpy as np
 from ..basic_env import BasicEnv
+from gym.spaces import Discrete,Box
 
 
 EMPTY = 0
@@ -50,6 +51,13 @@ class Surround(BasicEnv):
         self.winner = None
 
         self.reset()
+
+    def action_spaces(self):
+        return [Discrete(5) for _ in range(2)]
+
+    def observation_spaces(self):
+        bsize = self.view_size*2 + 1
+        return [Box(low=0,high=1,shape=(bsize,bsize,3)) for _ in range(2)]
 
     def reset(self):
         self.game_ended = False
@@ -120,12 +128,13 @@ class Surround(BasicEnv):
         if 0 <= offx <= 2*v and 0 <= offy <= 2*v:
             pos_panel_other[offy,offx] = 1
 
-        all_pannels = np.stack([pan1,pos_panel_cur,pos_panel_other],axis=0)
+        all_pannels = np.stack([pan1,pos_panel_cur,pos_panel_other],axis=2)
         print(all_pannels.shape)
 
         # flip pannels for player 1
         if player:
-            all_pannels = all_pannels[:,:,::-1]
+            all_pannels = all_pannels[:,::-1,:]
+        assert self.observation_spaces()[0].contains(all_pannels)
 
         return all_pannels
 
