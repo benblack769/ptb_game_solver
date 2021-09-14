@@ -3,7 +3,9 @@ import numpy as np
 from open_spiel.python.observation import make_observation
 from open_spiel.python import rl_environment
 import gym
-from pettingzoo import AECEnv
+from pettingzoo import AECEnv, ParallelEnv
+import pandas as pd
+import math
 
 
 class OpenSpielEnv(AECEnv):
@@ -83,6 +85,69 @@ class OpenSpielEnv(AECEnv):
 
     def close(self):
         pass
+
+
+class ImageSelectionParallelEnv(ParallelEnv):
+    '''
+    Two players try to decide whether an image is of
+    the correct class.
+    They are rewarded based on how much more probability
+    they assign to the correct image than the other player.
+
+    Note that the actual action space is discritized, but represents log probabilities
+
+    This game is kind of unstable and incentivises overfitting.
+    '''
+    def __init__(self, imgs, classes, target_class):
+        self.imgs = imgs
+        self.classes = classes
+        self.target_class = target_class
+        img_shape = self.imgs.shape[1:]
+        self.possible_agents = list(range(2))
+        self.observation_spaces = {
+            agent: gym.spaces.Box(shape=img_shape, low=0, high=255, dtype='uint8')
+            for agent in self.possible_agents
+        }
+        self.num_log_prob_bins = 10
+        self.num_actions = self.num_log_prob_bins * 2 + 1
+        self.min_log_prob = -10
+        self.action_spaces = {
+            agent: gym.spaces.Discrete(self.num_actions)
+            for agent in self.possible_agents
+        }
+        self.seed()
+
+    def seed(self, seed=None):
+        self.np_random, _ = gym.utils.seeding.np_random(seed)
+
+    def reset(self):
+        self.agents = self.possible_agents[:]
+        self.selected_idx = self.np_random.randint(low=0,high=len(self.imgs) - 1)
+        return self.get_obs()
+
+    def get_obs(self):
+        selected_img = self.imgs[self.selected_idx]
+        return {agent: selected_img for agent in self.agents}
+
+    def act_to_prob(self, action, was_target):
+        logit = ((action - self.num_log_prob_bins) / self.num_log_prob_bins) * self.min_log_prob
+        if not was_target:
+            logit = -logit
+        prob = 1 / (1 + math.exp(-logit))
+        return prob
+
+    def step(self, actions):
+        if not actions:
+            self.agents = []
+            return {}, {}, {}, {}
+        label = self.classes[self.selected_idx]
+        was_target = label == self.target_class
+        probs = {agent: self.act_to_prob(act, was_target) for agent, act in actions.items()}
+        worst_prob = min(probs.values())
+        rewards = {agent: prob - worst_prob for agent, prob in probs.items()}
+        dones = {agent: True for agent in self.agents}
+        infos = {agent: {} for agent in self.agents}
+        return self.get_obs(), rewards, dones, infos
 
 
 class ChangeGameEnv(AECEnv):
@@ -195,15 +260,24 @@ class ChangeGameEnv(AECEnv):
 
 
 
+def test_mnist_image_selection():
+    import tensorflow as tf
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    print(x_train.shape)
+    print(y_train.shape)
+    env = ImageSelectionParallelEnv(x_train, y_train, 1)
+    from pettingzoo.test import parallel_api_test
+    parallel_api_test(env)
 
 
+test_mnist_image_selection()
 
 
 def perf_go_comparison():
     from pettingzoo.test import performance_benchmark
-    from pettingzoo.classic import connect_four_v3
-    spiel_env = OpenSpielEnv("connect_four")
-    zoo_env = connect_four_v3.env()
+    from pettingzoo.classic import chess_v4
+    spiel_env = OpenSpielEnv("chess")
+    zoo_env = chess_v4.env()
 
     print("Speil env:")
     performance_benchmark(spiel_env)
@@ -239,11 +313,15 @@ def test_openspiel_fns():
     print(games_list)
     game = pyspiel.load_game("go", {"board_size":7})
     state = game.new_initial_state()
-    print(state.observation_tensor(0))
-    state.apply_action(0)
-    print(state.current_player())
-    print(state.is_chance_node())
-    print(state.legal_actions_mask())
+    obs_size = game.observation_tensor_size()
+    obs_data = np.zeros(obs_size, dtype='float32')
+    obs_data = state.observation_tensor(0, )
+    obs_data = state.observation_tensor(0, obs_data)
+    print(obs_data)
+    # state.apply_action(0)
+    # print(state.current_player())
+    # print(state.is_chance_node())
+    # print(state.legal_actions_mask())
     # print(game.num_distinct_actions())
     # print(game.policy_tensor_shape())
     # print(state.rewards())
